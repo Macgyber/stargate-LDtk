@@ -839,7 +839,7 @@ actor[:last_decision] = { type: :move, x: payload[:x], y: payload[:y] }
 ---
 
 <details>
-<summary>## 7. Módulo: Sistemas Globales & Futuro (#1000+)</summary>
+<summary>## 7. Módulo: Sistemas Globales & Futuro (#1000+) — [ Capa 2 en Desarrollo ]</summary>
 
 ### Próximamente: La Siguiente Capa
 Este rango está reservado para la expansión futura de la librería. Se vislumbra como una capa de orquestación global y sistemas avanzados que potenciarán las capacidades actuales de Stargateldtk.
