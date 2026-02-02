@@ -459,6 +459,19 @@ end
 ```
 ````
 
+````carousel
+### #0106: Dibujo de Rejilla (Renderizado de Fondo)
+**Dibujo de Rejilla**: El sub-proceso encargado de renderizar las capas de tiles. Itera sobre los datos visuales comprimidos por el cargador y aplica las transformaciones de cámara. Es el componente que construye la arquitectura visual del nivel, sirviendo como escenario base para la interacción de los agentes.
+<!-- slide -->
+```ruby
+# world_renderer.rb
+# #0106
+def self.draw_debug_grid(args, grid, zoom, cam_x, cam_y)
+  # ... tile rendering implementation ...
+end
+```
+````
+
 ---
 
 ## 5. Módulo: Tactics (#0151 - #0250)
@@ -495,8 +508,8 @@ end
 ````
 
 ````carousel
-### #0155: Constructor move_to
-**Constructor move_to**: Factory method para crear decisiones de movimiento validadas con justificación técnica.
+### #0155: Constructor move_to (Factory de Decisiones)
+**Constructor move_to**: El método formal para generar intenciones de movimiento. Encapsula la creación de un objeto `Decision` con tipo `:move`, asegurando que el destino y la justificación técnica se empaqueten correctamente. Al centralizar la creación de decisiones de movimiento, garantiza un contrato consistente entre el cerebro (Íntérprete) y el cuerpo (Ejecutor).
 <!-- slide -->
 ```ruby
 # decision.rb

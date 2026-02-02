@@ -3,7 +3,7 @@
 > [!IMPORTANT]
 > **OFFICIAL VERSION (DISTRIBUTION)**
 > This is the reference implementation used to develop the **Hot-Reload** and **Fluid Movement** features of Stargateldtk.
-> For deep technical understanding and logic mapping, refer to the [Nodal Reference](docs/referencia_nodal.md) (Spanish mandatory manual).
+> For deep technical understanding and logic mapping, refer to the [Nodal Reference](stargate-ldtk/docs/referencia_nodal.md) (Spanish mandatory manual).
 
 **Stargateldtk** is a runtime for DragonRuby designed for deterministic loading and technical analysis of **LDtk** data. It focuses on data consistency, separation of concerns, and auditable logic.
 
@@ -23,20 +23,20 @@ The architecture is built on consistency and traceability:
 
 The system is organized by clear responsibilities:
 
-- `core/`: Deterministic loading of LDtk files.
-- `analysis/`: Spatial analysis (LogicalMap, Collisions).
-- `render/`: Passive observers for drawing.
-- `tactics/`: Decision and evaluation modules.
-- `adapters/`: Bridges for DragonRuby.
+- `stargate-ldtk/core/`: Deterministic loading of LDtk files.
+- `stargate-ldtk/analysis/`: Spatial analysis (LogicalMap, Collisions).
+- `stargate-ldtk/render/`: Passive observers for drawing.
+- `stargate-ldtk/tactics/`: Decision and evaluation modules.
+- `stargate-ldtk/adapters/`: Bridges for DragonRuby.
 - `samples/`: Practical examples and reference exercises.
-- `docs/`: Manuals, specifications, and technical guides.
+- `stargate-ldtk/docs/`: Manuals, specifications, and technical guides.
 
 ---
 
 ## 🛠️ Reference Samples
 
 We have included:
-- **[Caverns](file:///Users/familiagomez/Desktop/PROYECTOS_PAPA/PROYECTOS_DRAGONRUBY/stargate-HUB/SDK-DR/mygame/lib/stargateldtk/samples/cavernas/main.rb)**: A tactics lab using a cavern map to demonstrate integration, smooth rendering, and decision making.
+- **[Caverns](samples/cavernas/main.rb)**: A tactics lab using a cavern map to demonstrate integration, smooth rendering, and decision making.
     - Fluid movement with interpolation.
     - Cinematic camera.
     - [Read Sample README](samples/cavernas/README.md)
@@ -79,10 +79,10 @@ This runtime is a tool for organizing game logic clearly.
 ## 📑 Design Specifications
 
 For deep-dives into the rules governing this system, consult the design specifications:
-*   [World Spec](docs/specs/world_spec.md)
-*   [Spatial Spec](docs/specs/spatial_spec.md)
-*   [User Manual](docs/user_manual.md)
-*   [Integration Guide](docs/integration_guide.md)
-*   [Nodal Reference (Spanish)](docs/referencia_nodal.md)
+*   [World Spec](stargate-ldtk/docs/specs/world_spec.md)
+*   [Spatial Spec](stargate-ldtk/docs/specs/spatial_spec.md)
+*   [User Manual](stargate-ldtk/docs/user_manual.md)
+*   [Integration Guide](stargate-ldtk/docs/integration_guide.md)
+*   [Nodal Reference (Spanish)](stargate-ldtk/docs/referencia_nodal.md)
 
 ---
