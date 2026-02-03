@@ -1,4 +1,4 @@
-module Stargateldtk
+module StargateLDtk
   module Tactics
     # #0154
     class Interpreter
@@ -101,7 +101,6 @@ module Stargateldtk
       def self.violates_constraint?(map, intent, candidate, context)
         case intent.type
         when :avoid
-          # #0167
           map.has_tag?(candidate[:x], candidate[:y], intent.payload[:tag])
         else
           false
@@ -113,7 +112,6 @@ module Stargateldtk
         intent = config[:intent]
         case intent.type
         when :reach
-          # #0168
           target = intent.payload
           new_dist  = map.distance(candidate[:x], candidate[:y], target[:x], target[:y])
           current_dist = map.distance(context[:x], context[:y], target[:x], target[:y])
@@ -132,11 +130,9 @@ module Stargateldtk
 
       # #0169
       def self.resolve_ties(winners, composite)
-        # Find the winner that best satisfies the highest priority heuristic
         highest_prio_intent = composite.intentions.select { |i| i[:kind] == :heuristic }.max_by { |i| i[:priority] || 0 }
         return winners.first unless highest_prio_intent
         
-        # In a real system, we'd re-score just for this intent. For now, pick first.
         winners.first
       end
 
@@ -177,7 +173,7 @@ module Stargateldtk
         Decision.move_to(next_step[:x], next_step[:y], { 
           rule: :pathfinding_step,
           heuristic: :manhattan,
-          avoided: [:hazard], # Semantic info
+          avoided: [:hazard],
           distance_to_target: (next_step[:x] - target_x).abs + (next_step[:y] - target_y).abs 
         })
       end

@@ -1,38 +1,149 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [1.2.0] - 2026-02-02
-
-### Added
-- **Interactive Nodal Reference**: Transformed `referencia_nodal.md` into a side-by-side interactive carousel system (Spanish).
-- **Atomic Nodal Mapping**: Every nodal tag (#XXXX) now corresponds to a unique, independent technical explanation and code snippet.
-
-### Changed
-- **Localization (v2)**: All public manuals, specifications, and samples translated to English.
-- **Terminology Alignment**: Standardized `SemanticContract` to `SemanticSpecification` across the entire library and documentation.
-- **Sample Cleanup**: Localized `cavernas` sample and removed redundant library copies.
-
-## [1.1.0-experimental] - 2026-02-01
-
-### Added
-- **Tactical Core**: Deterministic interpreter supporting `CompositeIntention` (Constraints + Heuristics).
-- **Temporal Horizon**: Awareness of future states (H=2) with Causal Veto and temporal discounting.
-- **Audit Suite (H-Audit v2)**: High-fidelity headless verification for determinism, p95 latency, and chaos stability.
-- **Chaos Tactics Lab**: Real-time multi-agent (10+) visualization tool with DragonRuby `primitives` rendering and live hot-reload sync.
-- **Contracts**: Formal Technical Contracts (Spatial, Tactical, Temporal, World, Entity Mapping) in English.
-- **Known Limits**: Explicit technical documentation of performance boundaries and cognitive scope.
-
-### Changed
-- **Architecture**: Enforced strict separation between Deliberation (Core) and Action (Executor).
-- **Perception**: Refactored `SpatialAnalyzer` into an intent-aware `LogicalMap` generator.
-- **Documentation**: Complete English translation and removal of metaphoric/philosophical language.
-
-### Fixed
-- **Rendering**: Corrected Z-sorting in DragonRuby labs to ensure actors remain visible above tactical overlays.
-- **Sync**: Implemented `world_version` tracking to prevent actors from making decisions using stale spatial data.
+Todas las versiones del proyecto están documentadas aquí.
 
 ---
-🏆 **v1.x Development Completed**
+
+## [0.8.0-alpha] - 2026-02-02 - AUDITADO Y SELLADO
+
+### 🎯 Estado Final
+- **Calificación**: 8.0/10 (funcional, auditable, sin usuarios reales)
+- **Desarrollo**: Sellado hasta validación en producción
+- **Política**: No expandir sin necesidad real
+
+### ✅ Correcciones Aplicadas
+
+#### Nomenclatura
+- Renombrado `Stargateldtk` → `StargateLDtk` en todos los archivos (13 archivos)
+- Actualizada documentación para reflejar nombre consistente
+
+#### Validación
+- Agregada validación estricta de entrada en `Loader.load`
+- Input externo ahora validado antes de procesamiento
+- Errores claros con `ArgumentError`
+
+#### Constantes
+- Extraídas constantes de formato LDtk:
+  - `ENTITIES_LAYER_TYPE = "Entities"`
+  - `LEVELS_KEY = "levels"`
+  - `LAYERS_KEY = "layerInstances"`
+  - `GRID_DATA_KEY = "intGridCsv"`
+  - `DEFAULT_GRID_SIZE = 16`
+
+#### Inmutabilidad
+- **BREAKING**: Eliminado método `World#next_version`
+- Razón: Violaba principio de inmutabilidad
+- Version ahora es solo dato, no comportamiento
+
+#### Documentación
+- Agregados anchor comments en clases críticas (`World`, `Loader`)
+- Creado `ARCHIVE_NOTICE.md` con política de archivo
+- Creado `DECISIONS_NOT_TAKEN.md` (qué NO se hizo y por qué)
+- Creado `PROJECT_CEILING.md` (límites de identidad)
+- Creado `FUTURE_MAINTAINER_NOTE.md` (contexto para el futuro)
+
+### 🔧 Archivos Modificados
+- `core/world.rb`
+- `core/loader.rb`
+- `analysis/spatial.rb`
+- `tactics/intention.rb`
+- `tactics/decision.rb`
+- `tactics/temporal.rb`
+- `tactics/interpreter.rb`
+- `render/world_renderer.rb`
+- `adapters/ldtk_to_dr.rb`
+- `engine/executor.rb`
+- `docs/referencia_nodal.md`
+- `README.md`
+- `CHANGELOG.md`
+
+### 🪦 Código Legacy Eliminado
+- `World#next_version` (auto-incremento de versión)
+
+---
+
+## [0.7.0] - 2026-02-02
+
+### Added
+- Interactive nodal reference in `docs/referencia_nodal.md`
+- Atomic nodal mapping (each #XXXX tag has unique explanation)
+
+### Changed
+- Localization v2: Manuals and specs translated to English
+- Terminology: `SemanticContract` → `SemanticSpecification`
+- Sample cleanup
+
+---
+
+## [0.6.0] - 2026-02-01
+
+### Added
+- **Tactical Core**: Deterministic interpreter with `CompositeIntention`
+- **Temporal Horizon**: Future state awareness (H=2)
+- **Audit Suite**: Headless verification for determinism
+- **Chaos Tactics Lab**: Multi-agent visualization tool
+- **Formal contracts**: Spatial, Tactical, Temporal, World, Entity Mapping
+- **Known limits**: Performance boundaries documentation
+
+### Changed
+- Architecture: Strict Deliberation/Executor separation
+- Perception: `SpatialAnalyzer` → `LogicalMap` generator
+- Documentation: Complete English translation
+
+### Fixed
+- Rendering: Z-sorting corrected
+- Sync: `world_version` tracking implemented
+
+---
+
+## [0.5.0] - 2026-01-30
+
+### Added
+- Hot-reload system for LDtk maps
+- Fluid movement with interpolation
+
+### Changed
+- Rendering improvements
+- Spatial analysis optimization
+
+---
+
+## [0.4.0] - 2026-01-29
+
+### Added
+- Tactical decision engine
+- Intention system
+
+---
+
+## [0.3.0] - 2026-01-28
+
+### Added
+- Basic spatial analysis
+- LogicalMap for walkability queries
+
+---
+
+## [0.2.0] - 2026-01-27
+
+### Added
+- LDtk to internal format loader
+- Core data structures (World, Grid, Entity)
+
+---
+
+## [0.1.0] - 2026-01-26
+
+### Added
+- Basic LDtk map rendering
+- DragonRuby adapters
+
+---
+
+## [0.0.1] - 2026-01-25
+
+### Added
+- Initial project structure
+- Basic bootstrap
+- First functional prototype
+

@@ -1,10 +1,9 @@
-module Stargateldtk
+module StargateLDtk
   module Tactics
     # #0153
     module Temporal
       # #0157
       def self.evaluate(map, composite, cand_node, context, horizon: 2, gamma: 0.5)
-        # #0157
         frontier = [[cand_node[:x], cand_node[:y], 1]]
         max_future_score = -1.0
         can_survive = false
@@ -17,11 +16,9 @@ module Stargateldtk
         while !visit_queue.empty?
           cx, cy, d = visit_queue.shift
           
-          # #0158
           node = { x: cx, y: cy, tag: map.tag_at(cx, cy) }
           
           if d >= horizon
-            # #0159
             if has_safe_out?(map, composite, node)
               can_survive = true
               score = score_state(map, composite, node, context)
@@ -78,7 +75,6 @@ module Stargateldtk
           case intent.type
           when :reach
             target = intent.payload
-            # #0163
             dist = map.distance(node[:x], node[:y], target[:x], target[:y])
             current_dist = map.distance(context[:x], context[:y], target[:x], target[:y])
             

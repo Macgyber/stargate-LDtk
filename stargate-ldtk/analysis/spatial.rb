@@ -1,4 +1,4 @@
-module Stargateldtk
+module StargateLDtk
   module Analysis
     # #0051
     class Spatial
@@ -31,6 +31,7 @@ module Stargateldtk
 
       private
 
+      # #0058
       def self.validate_world!(world)
         world.grids.each do |grid|
           expected_size = grid.size[:cols] * grid.size[:rows]
@@ -40,6 +41,7 @@ module Stargateldtk
         end
       end
 
+      # #0061
       def self.extract_topology(grid, contract)
         grid.data.map { |v| contract.tag_for(v) }
       end
@@ -50,11 +52,12 @@ module Stargateldtk
       attr_reader :mapping
 
       def initialize(mapping)
-        @mapping = mapping # { 0 => :empty, 1 => :solid }
+        @mapping = mapping
       end
 
+      # #0052
       def tag_for(value)
-        @mapping[value] || :blocked # Defensive default
+        @mapping[value] || :blocked
       end
 
       def to_h
@@ -70,7 +73,7 @@ module Stargateldtk
         @world_id = world.id
         @world_version = world.version
         @layout = world.layout
-        @topology = topology # Flat array of logical tags
+        @topology = topology
         @contract = contract
         @entities = world.entities
         
@@ -78,17 +81,18 @@ module Stargateldtk
         build_spatial_index!
       end
 
-      # Query: Is tile at (gx, gy) a certain tag?
+      # #0054
       def has_tag?(gx, gy, tag)
         tag_at(gx, gy) == tag
       end
 
+      # #0054
       def tag_at(gx, gy)
         return :out_of_bounds if gx < 0 || gy < 0 || gx >= @layout[:width] || gy >= @layout[:height]
         @topology[gy * @layout[:width] + gx]
       end
 
-      # Legacy support for walkable?
+      # #0054
       def walkable?(gx, gy)
         tag_at(gx, gy) == :empty
       end
@@ -100,7 +104,6 @@ module Stargateldtk
 
       # #0056
       def distance(x1, y1, x2, y2)
-        # Cache results if needed for performance, but for 20x20 it's O(V+E)
         queue = [[x1, y1, 0]]
         visited = { [x1, y1] => true }
         
@@ -117,9 +120,10 @@ module Stargateldtk
           end
         end
         
-        9999 # Infinity
+        9999
       end
 
+      # #0054
       def find_entities(type)
         @entities.select { |e| e.type == type }
       end
@@ -148,12 +152,14 @@ module Stargateldtk
         }
       end
 
+      # #0054
       def inspect
-        "#<Stargateldtk::Analysis::LogicalMap world:#{@world_id} v:#{@world_version} (#{@layout[:width]}x#{@layout[:height]})>"
+        "#<StargateLDtk::Analysis::LogicalMap world:#{@world_id} v:#{@world_version} (#{@layout[:width]}x#{@layout[:height]})>"
       end
 
       private
 
+      # #0055
       def build_spatial_index!
         @spatial_index = {}
         @entities.each do |e|

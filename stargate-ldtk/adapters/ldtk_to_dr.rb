@@ -1,4 +1,4 @@
-module Stargateldtk
+module StargateLDtk
   module Adapters
     # #0251
     class LDtkToDragonRuby

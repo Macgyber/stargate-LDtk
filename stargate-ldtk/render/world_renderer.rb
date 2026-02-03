@@ -1,4 +1,4 @@
-module Stargateldtk
+module StargateLDtk
   module Render
     # #0101
     class WorldRenderer
@@ -26,7 +26,6 @@ module Stargateldtk
 
       # #0106
       def self.draw_debug_grid(args, grid, zoom, cam_x, cam_y)
-        # Placeholder for tile rendering.
       end
 
       # #0105
@@ -34,12 +33,14 @@ module Stargateldtk
         sx = (entity.pos[:x] - cam_x) * zoom + 640
         sy = 360 - (entity.pos[:y] - cam_y) * zoom
         
+        # #0105
         args.outputs.primitives << { 
           x: sx, y: sy, w: 16 * zoom, h: 16 * zoom, 
           r: 200, g: 200, b: 255, 
           primitive_marker: :solid 
         }
         
+        # #0105
         args.outputs.primitives << { 
           x: sx, y: sy + (20 * zoom), 
           text: entity.type, 

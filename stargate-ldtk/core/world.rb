@@ -1,5 +1,12 @@
-module Stargateldtk
+module StargateLDtk
   module Core
+    # World is a pure data container.
+    # It must NOT:
+    # - infer meaning from data
+    # - mutate internal state
+    # - depend on external formats
+    # - manage its own versioning
+    #
     # #0003
     class World
       attr_reader :id, :layout, :grids, :entities, :metadata, :version
@@ -25,18 +32,7 @@ module Stargateldtk
       end
 
       def inspect
-        "#<Stargateldtk::Core::World id:#{@id} v:#{@version} grids:#{@grids.size} entities:#{@entities.size}>"
-      end
-
-      def next_version(updates = {})
-        World.new(
-          id: updates[:id] || @id,
-          layout: updates[:layout] || @layout,
-          grids: updates[:grids] || @grids,
-          entities: updates[:entities] || @entities,
-          metadata: updates[:metadata] || @metadata,
-          version: @version + 1
-        )
+        "#<StargateLDtk::Core::World id:#{@id} v:#{@version} grids:#{@grids.size} entities:#{@entities.size}>"
       end
     end
 
@@ -56,7 +52,7 @@ module Stargateldtk
       end
 
       def inspect
-        "#<Stargateldtk::Core::Grid #{@identifier} (#{@size[:cols]}x#{@size[:rows]}) visual_tiles:#{@visual_data.size}>"
+        "#<StargateLDtk::Core::Grid #{@identifier} (#{@size[:cols]}x#{@size[:rows]}) visual_tiles:#{@visual_data.size}>"
       end
     end
 
@@ -76,7 +72,7 @@ module Stargateldtk
       end
 
       def inspect
-        "#<Stargateldtk::Core::Entity #{@type} (#{@pos[:x]},#{@pos[:y]})>"
+        "#<StargateLDtk::Core::Entity #{@type} (#{@pos[:x]},#{@pos[:y]})>"
       end
     end
   end

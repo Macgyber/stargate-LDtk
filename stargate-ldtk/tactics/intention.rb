@@ -1,4 +1,4 @@
-module Stargateldtk
+module StargateLDtk
   module Tactics
     # #0151
     class Intention
@@ -22,7 +22,7 @@ module Stargateldtk
       end
 
       def inspect
-        "#<Stargateldtk::Tactics::Intention type:#{@type} payload:#{@payload}>"
+        "#<StargateLDtk::Tactics::Intention type:#{@type} payload:#{@payload}>"
       end
     end
 
@@ -41,7 +41,7 @@ module Stargateldtk
       end
 
       def inspect
-        "#<Stargateldtk::Tactics::CompositeIntention count:#{@intentions.size}>"
+        "#<StargateLDtk::Tactics::CompositeIntention count:#{@intentions.size}>"
       end
     end
   end

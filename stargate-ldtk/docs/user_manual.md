@@ -1,22 +1,59 @@
-# User Manual: Stargateldtk v1.0 📘
+# User Manual: StargateLDtk v0.8.0-alpha 📘
 
-This manual describes how to integrate and operate the **Stargateldtk** runtime in your DragonRuby project.
+This manual describes how to integrate and operate the **StargateLDtk** runtime in your DragonRuby project.
 
 ---
 
 ## 1. Installation and Setup
 
-Copy the `lib/stargateldtk` folder into your DragonRuby project's `lib/` directory.
+Copy the `lib/stargate-LDtk` folder into your DragonRuby project's `lib/` directory.
 
-In your `app/main.rb`, load the necessary components:
+In your `app/main.rb`, load the library:
 
 ```ruby
-require "lib/stargateldtk/bootstrap.rb"
+require "lib/stargate-LDtk/bootstrap.rb"
 ```
 
 ---
 
-## 2. Lifecycle
+## 2. Asset Integration (Spritesheets)
+
+> [!IMPORTANT]
+> **Path Matching**: LDtk stores paths to tilesets relative to the project file. When loading in DragonRuby, you must ensure the sprites are present in the `sprites/` directory.
+
+**Tips for Spritesheets**:
+1.  **Manual Override**: When rendering, you may need to map the LDtk tileset path to your actual DragonRuby path (e.g., `sprites/tileset.png`).
+2.  **Y-Flip**: Remember that LDtk is Y-down and DragonRuby is Y-up. The library includes `Adapters::LDtkToDragonRuby` to help with these conversions.
+
+---
+
+## 3. Ergonomics & Development Flow
+
+### A. Automatic Hot-Reload (Map)
+To iterate fast without pressing `Ctrl+R`, use a file monitor in your `tick` loop:
+
+```ruby
+# Monitor the .ldtk file modification time
+if args.gtk.stat_file("path/to/map.ldtk").mtime > @last_reload
+  reload_map!
+end
+```
+
+### B. Position Persistence (Sacred Position)
+To avoid walking through multiple rooms after every reload, implement a persistence service:
+
+```ruby
+# Save player grid pos to YAML
+$gtk.write_file("dev_pos.yaml", $gtk.serialize_state({x: px, y: py}))
+
+# Load on startup
+data = $gtk.deserialize_state($gtk.read_file("dev_pos.yaml"))
+player.pos = data if data
+```
+
+---
+
+## 4. Lifecycle
 
 To maintain system integrity, data flow is unidirectional.
 
@@ -41,7 +78,7 @@ def update_logic(args)
   # Runs when the world changes (or on the first frame)
   return if args.state.logical_map && args.state.logical_map.world_version == args.state.world.version
   
-  args.state.logical_map = Stargateldtk::Analysis::Spatial.analyze(args.state.world)
+  args.state.logical_map = StargateLDtk::Analysis::Spatial.analyze(args.state.world)
 end
 ```
 
@@ -54,7 +91,7 @@ def tick(args)
   
   # The renderer does not make decisions; it only observes.
   camera = { x: args.state.player.x, y: args.state.player.y, zoom: 3.0 }
-  Stargateldtk::Render::WorldRenderer.draw(args, args.state.world, camera)
+  StargateLDtk::Render::WorldRenderer.draw(args, args.state.world, camera)
 end
 ```
 
@@ -100,18 +137,17 @@ The `World` contains the **static map configuration**. Changing game state (enem
 ## 6. Troubleshooting
 
 *   **Is my screen grey?**: Check if the JSON is being read correctly. Use `puts args.state.world.id`.
-*   **Do collisions not match up?**: Ensure your LDtk layer is named exactly "Collision" (or adjust the Analyzer).
-*   **Can't see my entities?**: Check if the Renderer has a debug configuration for the entity type you created.
+*   **Do collisions not match up?**: Ensure your LDtk layer is named correctly (e.g. "IntGrid_layer") and the `mapping` in `Spatial.analyze` matches.
+*   **Can't see my entities?**: Check if your rendering loop is iterating over `world.entities`.
 
 ---
 
 ## 7. DragonRuby Notes (Rendering Gotchas)
 
-The Core is **headless** and provides data in native LDtk coordinates (Y-down). When rendering in DragonRuby, keep in mind its **Y-up** coordinate system:
+The Core is **headless** and provides data in native LDtk coordinates (Y-down). When rendering in DragonRuby, use `Adapters`:
 
-- **Screen Y**: `pos_y = offset_y + world_px_height - (ldtk_px_y) - tile_size`
-- **Texture Y**: DragonRuby reads textures from bottom to top.
-  - `source_y = atlas_height - ldtk_src_y - tile_size`
+- **Screen Y**: Use `adapter.screen_y` or `adapter.grid_y_to_screen`.
+- **Texture Y**: Use `adapter.source_y` to invert the texture atlas coordinate.
 
 > [!IMPORTANT]
-> If you don't invert the Y axis when reading the spritesheet, the wrong tiles will be drawn.
+> DragonRuby reads textures from bottom to top. Failing to use `adapter.source_y` results in vertically flipped tiles.

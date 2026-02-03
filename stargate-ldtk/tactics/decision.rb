@@ -1,4 +1,4 @@
-module Stargateldtk
+module StargateLDtk
   module Tactics
     # #0152
     class Decision
@@ -7,7 +7,7 @@ module Stargateldtk
       def initialize(type:, payload: {}, reason: {})
         @type = type
         @payload = payload
-        @reason = reason # #0152
+        @reason = reason
       end
 
       # #0155
@@ -28,7 +28,7 @@ module Stargateldtk
       end
 
       def inspect
-        "#<Stargateldtk::Tactics::Decision type:#{@type} reason:#{@reason[:rule]}>"
+        "#<StargateLDtk::Tactics::Decision type:#{@type} reason:#{@reason[:rule]}>"
       end
     end
   end

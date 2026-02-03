@@ -1,4 +1,6 @@
-# Referencia Nodal: Stargateldtk 🌐
+# Referencia Nodal: StargateLDtk 🌐
+
+**Versión**: 0.8.0-alpha
 
 Este documento es el manual técnico de estudio de la librería. Mapea cada identificador numérico (`#XXXX`) en el código fuente a una explicación detallada de su mecánica interna, lógica de diseño y comportamiento esperado.
 
@@ -16,82 +18,300 @@ Este documento es el manual técnico de estudio de la librería. Mapea cada iden
 ---
 
 <details>
-<summary>## 1. Módulo: Bootstrap & Engine (#0001 - #0019)</summary>
+<summary>## 1. Módulo: Bootstrap & Engine (#0010 - #0019)</summary>
 
 ### #0010: Bootloader de Infraestructura
-**Bootloader de Infraestructura**: Primer paso del ciclo de vida. Carga la definición de la clase `World`, estableciendo la estructura de datos sobre la cual operarán todos los demás módulos.
 
+**Qué hace**: Carga las clases de datos fundamentales del sistema.
+
+**Por qué primero**: `World`, `Grid` y `Entity` son las estructuras base que todos los demás módulos necesitan. Sin estas clases, nada más puede funcionar.
+
+**Orden de carga**:
+1. `core/world.rb` - Define `World` (contenedor principal)
+2. `core/loader.rb` - Define `Loader` (convierte LDtk JSON → World)
+
+**Serializado**:
 ```ruby
-# bootstrap.rb
 # #0010
-require "lib/stargateldtk/core/world.rb"
+require_relative "stargate-ldtk/core/world.rb"
+require_relative "stargate-ldtk/core/loader.rb"
 ```
 
-### #0011: Bootloader del Cargador
-**Bootloader del Cargador**: Segundo paso del ciclo de vida. Carga la lógica de ingesta (`Loader`), permitiendo que el sistema comience a procesar archivos JSON de LDtk.
+**Decisión técnica**: Se usa `require_relative` en vez de `require` absoluto para que el módulo sea portable. Si se mueve la carpeta, los paths relativos siguen funcionando.
 
-```ruby
-# bootstrap.rb
-# #0011
-require "lib/stargateldtk/core/loader.rb"
-```
+---
 
 ### #0013: Carga de Analítica
-**Carga de Analítica**: Integra el módulo `Analysis`, permitiendo que el `World` sea consultable topológicamente.
 
+**Qué hace**: Integra el módulo de análisis espacial.
+
+**Por qué después del core**: `Spatial` necesita que `World` ya esté definido porque analiza objetos `World` y genera `LogicalMap`.
+
+**Serializado**:
 ```ruby
-# bootstrap.rb
 # #0013
-require "lib/stargateldtk/analysis/spatial.rb"
+require_relative "stargate-ldtk/analysis/spatial.rb"
 ```
+
+**Función**: Permite consultas topológicas (walkability, pathfinding) sobre el `World`.
+
+---
 
 ### #0014: Carga de Renderizado
-**Carga de Renderizado**: Integra el módulo `Render`, desacoplando la lógica de la visualización.
 
+**Qué hace**: Integra el módulo de visualización.
+
+**Por qué después de análisis**: El renderer necesita tanto `World` (para saber qué dibujar) como potencialmente `LogicalMap` (para debug visual).
+
+**Serializado**:
 ```ruby
-# bootstrap.rb
 # #0014
-require "lib/stargateldtk/render/world_renderer.rb"
+require_relative "stargate-ldtk/render/world_renderer.rb"
 ```
+
+**Principio**: El renderer es **pasivo**. Solo observa datos, nunca los modifica.
+
+---
 
 ### #0015: Carga de Tácticas
-**Carga de Tácticas**: Integra el cerebro del sistema para el razonamiento de actores.
 
+**Qué hace**: Integra el cerebro del sistema para razonamiento de actores.
+
+**Por qué después de análisis**: Las tácticas necesitan `LogicalMap` para tomar decisiones basadas en el espacio.
+
+**Orden interno**:
+1. `intention.rb` - Define qué quiere hacer un actor
+2. `decision.rb` - Define qué decidió hacer
+3. `temporal.rb` - Awareness de estados futuros
+4. `interpreter.rb` - Convierte intención → decisión
+
+**Serializado**:
 ```ruby
-# bootstrap.rb
 # #0015
-require "lib/stargateldtk/tactics/intention.rb"
-require "lib/stargateldtk/tactics/decision.rb"
-require "lib/stargateldtk/tactics/temporal.rb"
-require "lib/stargateldtk/tactics/interpreter.rb"
+require_relative "stargate-ldtk/tactics/intention.rb"
+require_relative "stargate-ldtk/tactics/decision.rb"
+require_relative "stargate-ldtk/tactics/temporal.rb"
+require_relative "stargate-ldtk/tactics/interpreter.rb"
 ```
+
+**Arquitectura**: Separación estricta entre **Deliberación** (Tactics) y **Acción** (Executor).
+
+---
 
 ### #0016: Carga de Adaptadores
-**Carga de Adaptadores**: Carga las utilidades de conversión de coordenadas específicas para DragonRuby.
 
+**Qué hace**: Carga utilidades de conversión específicas para DragonRuby.
+
+**Por qué al final**: Los adaptadores dependen de que todo lo demás ya esté cargado.
+
+**Serializado**:
 ```ruby
-# bootstrap.rb
-# #0016
-require "lib/stargateldtk/adapters/ldtk_to_dr.rb"
+# #0016 - Adapters
+require_relative "adapters/ldtk_to_dr.rb"
 ```
+
+**Función**: Convierte coordenadas LDtk (Y-down) a DragonRuby (Y-up).
+
+---
 
 ### #0012: Sello de Disponibilidad
-**Sello de Disponibilidad**: Mensaje técnico en consola que confirma la versión del SDK y compatibilidad del entorno.
 
+**Qué hace**: Confirma que el sistema está listo.
+
+**Por qué al final**: Solo se imprime después de que todos los módulos se cargaron sin errores.
+
+**Serializado**:
 ```ruby
-# bootstrap.rb
 # #0012
-puts "🌌 Stargateldtk v1.2: Inicializado."
+puts "🌌 StargateLDtk v0.8.0-alpha: Initialized."
 ```
+
+**Propósito**: Mensaje técnico en consola que confirma:
+- ✅ Todos los módulos se cargaron
+- ✅ No hubo errores de sintaxis
+- ✅ El sistema está listo para usar
+
+**Versión**: Debe coincidir con `CHANGELOG.md` y tags de git.
+
 </details>
 
 ---
 
 <details>
-<summary>## 2. Módulo: Core (#0020 - #0050)</summary>
+<summary>## 2. Módulo: Core - Data Structures (#0002 - #0009)</summary>
 
-### #0002: Clase Loader (Motor de Ingesta)
-**Clase Loader**: El punto de entrada transaccional del sistema. Traduce el JSON jerárquico y verboso de LDtk a un objeto `World` plano y optimizado. Su responsabilidad es filtrar el ruido del editor (metadatos de interfaz, capas ocultas) para entregar una estructura de datos pura que la IA pueda consumir sin overhead de parseo repetitivo. En esta fase (Fénix MVP) se enfoca en el procesamiento determinista del primer nivel (`levels[0]`).
+### #0002: Loader - Zona de Desconfianza
+
+**Qué hace**: Convierte JSON de LDtk en objetos `World` internos.
+
+**Por qué es crítico**: Este es el único punto donde entra data externa no confiable. Todo lo que pase de aquí debe estar validado.
+
+**Arquitectura**:
+- **Input**: JSON de LDtk (formato externo, puede estar corrupto)
+- **Output**: `World` (formato interno, garantizado válido)
+
+**Validaciones**:
+```ruby
+# #0002
+raise ArgumentError, "ldtk_json must be a Hash" unless ldtk_json.is_a?(Hash)
+raise ArgumentError, "ldtk_json must have 'levels' key" unless ldtk_json.key?(LEVELS_KEY)
+```
+
+**Constantes de formato**:
+```ruby
+ENTITIES_LAYER_TYPE = "Entities"
+LEVELS_KEY = "levels"
+LAYERS_KEY = "layerInstances"
+GRID_DATA_KEY = "intGridCsv"
+DEFAULT_GRID_SIZE = 16
+```
+
+**Decisión**: Constantes extraídas para evitar magic strings y facilitar cambios de formato LDtk.
+
+---
+
+### #0004: Detección de Grid Size
+
+**Qué hace**: Determina el tamaño de celda del mapa.
+
+**Por qué es necesario**: LDtk permite grid size variable. Necesitamos detectarlo para convertir coordenadas pixel → grid.
+
+**Serializado**:
+```ruby
+# #0004
+first_layer = (level[LAYERS_KEY] || []).first
+gsize = (first_layer ? first_layer["__gridSize"] : (ldtk_json["defaultGridSize"] || DEFAULT_GRID_SIZE)).to_i
+```
+
+**Fallback**: Si no hay layers, usa `defaultGridSize`. Si tampoco existe, usa `16` (estándar LDtk).
+
+---
+
+### #0005: Construcción de Layout
+
+**Qué hace**: Calcula dimensiones del mundo en pixels y en grid.
+
+**Serializado**:
+```ruby
+# #0005
+layout = {
+  px_width:  level["pxWid"].to_i,
+  px_height: level["pxHei"].to_i,
+  width:     (level["pxWid"].to_i / gsize).to_i,
+  height:    (level["pxHei"].to_i / gsize).to_i,
+  tile_size: gsize
+}
+```
+
+**Uso posterior**: `Spatial` usa `layout.width` y `layout.height` para crear `LogicalMap`.
+
+---
+
+### #0006: Procesamiento de Layers
+
+**Qué hace**: Itera sobre todas las capas del nivel y las clasifica.
+
+**Tipos de layer**:
+1. **Entities** (`__type == "Entities"`) → van a `entities[]`
+2. **Tiles/IntGrid** (resto) → van a `grids[]`
+
+**Serializado**:
+```ruby
+# #0006
+grids = []
+entities = []
+(level[LAYERS_KEY] || []).each do |layer|
+  if layer["__type"] == ENTITIES_LAYER_TYPE
+    # Procesar entidades (#0007)
+  else
+    # Procesar grids (#0008)
+  end
+end
+```
+
+---
+
+### #0007: Extracción de Entidades
+
+**Qué hace**: Convierte `entityInstances` de LDtk en objetos `Entity`.
+
+**Validación**: Verifica que `entityInstances` exista antes de iterar.
+
+**Serializado**:
+```ruby
+# #0007
+next unless layer["entityInstances"]
+
+layer["entityInstances"].each do |e|
+  entities << Entity.new(
+    id: e["iid"],
+    type: e["__identifier"],
+    pos: { 
+      x: e["px"][0], 
+      y: e["px"][1],
+      grid_x: e["__grid"][0], 
+      grid_y: e["__grid"][1] 
+    },
+    fields: extract_fields(e["fieldInstances"])
+  )
+end
+```
+
+**Campos custom**: `extract_fields` convierte `fieldInstances` en hash simple.
+
+---
+
+### #0008: Extracción de Grids
+
+**Qué hace**: Convierte layers de tiles en objetos `Grid`.
+
+**Tipos de tiles**:
+- `autoLayerTiles` - Tiles generados automáticamente
+- `gridTiles` - Tiles manuales
+- `intGridCsv` - Data de walkability/collision
+
+**Serializado**:
+```ruby
+# #0008
+visual_tiles = (layer["autoLayerTiles"] || layer["gridTiles"] || []).map do |t|
+  { px: t["px"], src: t["src"], f: t["f"], t: t["t"] }
+end
+
+grids << Grid.new(
+  identifier: layer["__identifier"],
+  size: { cols: layer["__cWid"], rows: layer["__cHei"] },
+  data: layer[GRID_DATA_KEY] || [],
+  visual_data: visual_tiles
+)
+```
+
+**Uso posterior**: `WorldRenderer` usa `visual_data` para dibujar. `Spatial` usa `data` para walkability.
+
+---
+
+### #0009: Construcción de World
+
+**Qué hace**: Ensambla todas las piezas en un objeto `World` inmutable.
+
+**Serializado**:
+```ruby
+# #0009
+World.new(
+  id: level["iid"],
+  layout: layout,
+  grids: grids,
+  entities: entities,
+  metadata: { 
+    bg_color: level["__bgColor"], 
+    toc: ldtk_json["toc"] || [] 
+  },
+  version: version
+)
+```
+
+**Inmutabilidad**: Una vez creado, `World` no se modifica. Cualquier cambio requiere crear nuevo `World`.
+
+</details>
 
 ```ruby
 # loader.rb
@@ -206,90 +426,141 @@ World.new(
 <details>
 <summary>## 3. Módulo: Analysis (#0051 - #0100)</summary>
 
-### #0051: Clase Spatial (Motor de Síntesis Topológica)
-**Clase Spatial**: El orquestador de la interpretación espacial. Su función es "mirar" la estructura inmutable del `World` y derivar de ella un `LogicalMap`. Este proceso es puramente funcional y carece de efectos secundarios; no altera el mundo, sino que genera una capa cognitiva que permite a otros sistemas razonar sobre la geometría del nivel sin conocer los detalles técnicos de LDtk.
+### #0051: Spatial.analyze
 
+**Qué hace**: Convierte `World` (datos crudos) → `LogicalMap` (inteligencia espacial consultable).
+
+**Input**: `world` (objeto World), `config` (hash opcional)  
+**Output**: `LogicalMap` o `nil`
+
+**Serializado**:
 ```ruby
-# spatial.rb
 # #0051
 class Spatial
   def self.analyze(world, config = {})
+    return nil unless world
     # ...
-```
-
-### #0052: Especificación Semántica (El Diccionario de la Verdad)
-**Especificación Semántica**: Define el contrato de significado entre el arte y la lógica. Mapea los IDs numéricos crudos del IntGrid de LDtk a símbolos semánticos legibles por humanos (ej. `:empty`, `:solid`, `:hazard`). Esta abstracción es fundamental para que el intérprete táctico pueda tomar decisiones basadas en "conceptos" en lugar de "números mágicos", permitiendo que el diseño del juego evolucione sin romper la IA.
-
-```ruby
-# spatial.rb
-# #0052
-class SemanticSpecification
-  attr_reader :mapping
-  def initialize(mapping)
-    @mapping = mapping
   end
-  # ...
 end
 ```
 
-### #0053: Verificación Causal (Defensa del Runtime)
-**Verificación Causal**: Un mecanismo de "Falla Rápida" (Fail-Fast). Si el sistema no encuentra la capa de colisión solicitada, lanza una excepción inmediata. Esto previene que la IA opere en un "vacío lógico" donde todo parece transitable, lo cual resultaría en comportamientos erráticos difíciles de depurar. Es el guardián de la integridad del razonamiento espacial.
+---
 
+### #0052: SemanticSpecification
+
+**Qué hace**: Mapea enteros a tags semánticos.
+
+**Por qué**: LDtk guarda colisión como números. Necesitamos tags legibles (`:empty`, `:solid`).
+
+**Serializado**:
 ```ruby
-# spatial.rb
-# #0053
-raise "Spatial Analysis Error: Grid '#{grid_id}' not found..." unless collision_grid
+# #0052
+class SemanticSpecification
+  def initialize(mapping)
+    @mapping = mapping
+  end
+
+  def tag_for(value)
+    @mapping[value] || :blocked
+  end
+end
 ```
 
-### #0058: Validación Estructural (Sanidad de Memoria)
-**Validación Estructural**: Un protocolo de seguridad que garantiza que la cantidad de datos en el buffer coincida exactamente con el área declarada (`cols * rows`). Esta verificación previene errores de "fuera de límites" (Out-of-Bounds) durante consultas tácticas de alta frecuencia, asegurando que el índice lineal de la topología sea siempre consistente con el layout del mundo.
+**Default defensivo**: Valores desconocidos → `:blocked`.
 
+---
+
+### #0053: Grid Validation
+
+**Qué hace**: Crash si el grid de colisión no existe.
+
+**Por qué fail-fast**: Mejor crash en load que fallo silencioso durante gameplay.
+
+**Serializado**:
 ```ruby
-# spatial.rb
+# #0053
+raise "Spatial Analysis Error: Grid '#{grid_id}' not found in World." unless collision_grid
+```
+
+---
+
+### #0058: World Validation
+
+**Qué hace**: Valida que todos los grids tengan el tamaño correcto de datos.
+
+**Por qué crítico**: Si un grid dice 10x10 pero tiene 99 celdas, las consultas fallarán.
+
+**Serializado**:
+```ruby
 # #0058
 def self.validate_world!(world)
   world.grids.each do |grid|
     expected_size = grid.size[:cols] * grid.size[:rows]
     if grid.data.size != expected_size
-      raise "Error: Grid size mismatch..."
+      raise "Error: Grid '#{grid.identifier}' size mismatch..."
     end
   end
 end
 ```
 
-### #0059: Instanciación de Especificación (Carga de Reglas)
-**Instanciación de Especificación**: Carga el mapeo semántico derivado de la configuración. Si no se provee ninguno, asume un entorno vacío por defecto para pruebas de estrés. Es el momento en que el sistema decide "cómo se siente" cada celda del mapa, estableciendo las leyes físicas (transitabilidad) del entorno.
+---
 
+### #0059: Contract Creation
+
+**Qué hace**: Crea mapeo de números → tags semánticos.
+
+**Serializado**:
 ```ruby
-# spatial.rb
 # #0059
 contract = SemanticSpecification.new(config[:mapping] || { 0 => :empty })
 ```
 
-### #0060: Resolución de Capa Lógica (Identificación de Colisión)
-**Resolución de Capa Lógica**: Busca dinámicamente la capa que servirá como base para el grafo de movimiento. Por convención, busca una capa llamada "Collision". Este punto conecta el diseño visual del artista en LDtk con el motor de IA, permitiendo que cambios en el editor se reflejen instantáneamente en el comportamiento sin recompilar lógica.
+**Default**: `0 = :empty` (caminable).
 
+---
+
+### #0060: Collision Grid Selection
+
+**Qué hace**: Encuentra el grid que contiene datos de walkability.
+
+**Serializado**:
 ```ruby
-# spatial.rb
 # #0060
 grid_id = config[:collision_grid] || "Collision"
 collision_grid = world.grids.find { |g| g.identifier == grid_id }
 ```
 
-### #0061: Extracción de Topología (Síntesis de Significado)
-**Extracción de Topología**: El proceso de "cocción" de datos. Itera sobre el grid numérico y consulta la especificación semántica para cada tile. El resultado es un array de símbolos de alto nivel optimizado para consultas rápidas. Esta síntesis es lo que permite que el `LogicalMap` responda a preguntas como "¿puedo caminar aquí?" en microsegundos.
+**Default**: Busca grid llamado `"Collision"`.
 
+---
+
+### #0061: Topology Extraction
+
+**Qué hace**: Convierte array de enteros → array de tags semánticos.
+
+**Ejemplo**:
+- Input: `[0, 0, 1, 0, 1, 1]`
+- Contract: `{ 0 => :empty, 1 => :solid }`
+- Output: `[:empty, :empty, :solid, :empty, :solid, :solid]`
+
+**Serializado**:
 ```ruby
-# spatial.rb
 # #0061
 topology = extract_topology(collision_grid, contract)
+
+def self.extract_topology(grid, contract)
+  grid.data.map { |v| contract.tag_for(v) }
+end
 ```
 
-### #0054: LogicalMap (El Marco Cognitivo Estático)
-**LogicalMap**: El producto final del análisis. Es un objeto "Read-Only" que representa la memoria espacial del sistema. Almacena la topología ya procesada y la versión del mundo correspondiente. Esto garantiza que cualquier decisión tomada por una IA esté basada en una "fotografía" coherente y válida del entorno, evitando inconsistencias durante el Hot-Reload.
+---
 
+### #0054: LogicalMap Construction
+
+**Qué hace**: Crea el objeto de mapa consultable final.
+
+**Serializado**:
 ```ruby
-# spatial.rb
 # #0054
 LogicalMap.new(
   world: world,
@@ -298,70 +569,126 @@ LogicalMap.new(
 )
 ```
 
-### #0055: Indexación Espacial (Localidad O(1))
-**Indexación Espacial**: Una estructura de datos de aceleración. Organiza todas las entidades del mundo en un mapa de calor posicional (Hash). Esto permite que preguntas como "¿qué enemigos están en esta celda específica?" se respondan instantáneamente sin tener que recorrer toda la lista de entidades, permitiendo escalar a cientos de agentes sin degradar el rendimiento.
+**Contenido**:
+- `@world_id`, `@world_version` - Identificación
+- `@layout` - Dimensiones
+- `@topology` - Tags semánticos
+- `@entities` - Entidades del mundo
+- `@spatial_index` - Lookup O(1) por posición
 
+---
+
+### #0055: Spatial Index
+
+**Qué hace**: Crea hash map para lookup rápido de entidades por posición.
+
+**Performance**: `entities_at(x, y)` es O(1) en vez de O(n).
+
+**Serializado**:
 ```ruby
-# spatial.rb
 # #0055
 def build_spatial_index!
   @spatial_index = {}
   @entities.each do |e|
-    gx, gy = e.pos[:grid_x], e.pos[:grid_y]
+    gx = e.pos[:grid_x]
+    gy = e.pos[:grid_y]
     @spatial_index[[gx, gy]] ||= []
     @spatial_index[[gx, gy]] << e
   end
 end
 ```
 
-### #0056: Cálculo de Distancia (Camino de Mínima Resistencia)
-**Cálculo de Distancia**: Implementación de un algoritmo de búsqueda de rutas (BFS) deterministicos. A diferencia de una distancia euclidiana simple, este cálculo respeta las paredes y obstáculos del `LogicalMap`. Es la métrica central que usa la IA para evaluar cuán "cerca" está realmente de un objetivo, considerando la topología real del terreno.
+---
 
+### #0056: Distance Calculation (BFS)
+
+**Qué hace**: Encuentra distancia de camino caminable más corto.
+
+**Algoritmo**: Breadth-First Search.
+
+**Serializado**:
 ```ruby
-# spatial.rb
 # #0056
 def distance(x1, y1, x2, y2)
   queue = [[x1, y1, 0]]
-  # ... BFS algorithm implementation ...
+  visited = { [x1, y1] => true }
+  
+  while !queue.empty?
+    cx, cy, d = queue.shift
+    return d if cx == x2 && cy == y2
+    
+    neighbors(cx, cy).each do |n|
+      next if visited[[n[:x], n[:y]]]
+      next unless walkable?(n[:x], n[:y])
+      
+      visited[[n[:x], n[:y]]] = true
+      queue << [n[:x], n[:y], d + 1]
+    end
+  end
+  
+  9999
 end
 ```
 
-### #0057: Cálculo de Vecindad (Discernimiento de Adyacencia)
-**Cálculo de Vecindad**: Determina los movimientos legales inmediatos desde una celda. Aplica de forma atómica tres filtros: límites del mapa, existencia de la celda y transitabilidad lógica. Es el componente que define las "opciones" de un agente en cada paso de su simulación táctica.
+**Retorna**: Distancia en tiles, o `9999` si inalcanzable.
 
+---
+
+### #0057: Neighbors Calculation
+
+**Qué hace**: Retorna tiles adyacentes válidos (4-direccional).
+
+**Serializado**:
 ```ruby
-# spatial.rb
 # #0057
 def neighbors(gx, gy)
   [[0, 1], [0, -1], [1, 0], [-1, 0]].map do |dx, dy|
     nx, ny = gx + dx, gy + dy
-    # ... boundary checks ...
+    next nil if nx < 0 || ny < 0 || nx >= @layout[:width] || ny >= @layout[:height]
+    { x: nx, y: ny, tag: tag_at(nx, ny) }
   end.compact
 end
 ```
+
+**Direcciones**: Arriba, Abajo, Derecha, Izquierda (sin diagonales).
+
 </details>
 
 ---
 
 <details>
-<summary>## 4. Módulo: Render (#0101 - #0150)</summary>
+<summary>## 4. Módulo: Render (#0101 - #0106)</summary>
 
-### #0101: Clase WorldRenderer (Observador Pasivo)
-**Clase WorldRenderer**: El componente de salida visual. Sigue el patrón de "Observación Pura": no posee estado propio ni conoce las leyes de colisión o IA. Su única función es iterar sobre la "Fuente de Verdad" (`World`) y generar una cola de primitivas gráficas. Este desacoplamiento garantiza que los errores en la visualización nunca corrompan la lógica del juego.
+### #0101: WorldRenderer.draw - Entry Point
 
+**Qué hace**: Dibuja el `World` en pantalla usando primitivas de DragonRuby.
+
+**Input**: `args` (DragonRuby args), `world` (World object), `camera` (opcional)  
+**Output**: Primitivas gráficas en `args.outputs`
+
+**Serializado**:
 ```ruby
-# world_renderer.rb
 # #0101
 class WorldRenderer
   def self.draw(args, world, camera = nil)
+    return unless world
     # ...
+  end
+end
 ```
 
-### #0102: Purga de Buffer (Línea Base Determinista)
-**Purga de Buffer**: El primer paso de cada cuadro de renderizado. Dibuja un rectángulo sólido que cubre todo el canvas (1280x720). Esto elimina cualquier rastro del cuadro anterior (efecto ghosting) y establece un fondo neutro, garantizando que la representación visual sea siempre una traducción fresca y exacta del estado actual del mundo.
+**Principio**: Renderer es **pasivo**. Solo observa `World`, nunca lo modifica.
 
+---
+
+### #0102: Clear Screen
+
+**Qué hace**: Limpia la pantalla dibujando un rectángulo negro.
+
+**Por qué necesario**: Elimina residuos del frame anterior (ghosting).
+
+**Serializado**:
 ```ruby
-# world_renderer.rb
 # #0102
 args.outputs.primitives << { 
   x: 0, y: 0, w: 1280, h: 720, 
@@ -370,51 +697,113 @@ args.outputs.primitives << {
 }
 ```
 
-### #0103: Normalización de Cámara (Transformación de Proyección)
-**Normalización de Cámara**: Calcula los parámetros de visualización. Extrae las coordenadas de desplazamiento (`cam_x/y`) y el factor de `zoom`. Estos valores son fundamentales para convertir las coordenadas absolutas del mundo en coordenadas relativas de pantalla, permitiendo efectos de scroll y escalado sin afectar la lógica de rejilla subyacente.
+**Dimensiones**: 1280x720 (resolución estándar DragonRuby).
 
+---
+
+### #0103: Camera Parameters
+
+**Qué hace**: Extrae parámetros de cámara (posición y zoom).
+
+**Por qué necesario**: Convierte coordenadas mundo → coordenadas pantalla.
+
+**Serializado**:
 ```ruby
-# world_renderer.rb
 # #0103
 cam_x = camera ? camera[:x] : 0
-# ...
+cam_y = camera ? camera[:y] : 0
 zoom  = camera ? camera[:zoom] : 1.0
 ```
 
-### #0104: Bucle de Renderizado (Secuenciación Z-Order)
-**Bucle de Renderizado**: Gestiona la jerarquía visual de profundidad. Primero dibuja las rejillas (el entorno estático) y luego las entidades (objetos dinámicos). Esta secuenciación manual de DragonRuby asegura que los personajes siempre se vean por encima del terreno, eliminando la necesidad de un sistema de profundidad complejo para escenarios 2D simples.
+**Defaults**: Si no hay cámara, usa (0, 0) con zoom 1.0.
 
+---
+
+### #0104: Render Loop
+
+**Qué hace**: Dibuja grids primero, luego entities.
+
+**Por qué este orden**: Grids son fondo, entities son foreground. Orden = Z-depth.
+
+**Serializado**:
 ```ruby
-# world_renderer.rb
 # #0104
 world.grids.each { |grid| draw_debug_grid(args, grid, zoom, cam_x, cam_y) }
 world.entities.each { |entity| draw_entity(args, entity, zoom, cam_x, cam_y) }
 ```
 
-### #0105: Proyección de Entidades (Matemática de Pantalla)
-**Proyección de Entidades**: La fórmula de transformación final. Mapea la posición de una entidad en el mundo a píxeles de pantalla. Utiliza el punto central `640/360` para pivotar la cámara y aplica el `zoom` de forma multiplicativa. Es el "plano" técnico que dicta exactamente dónde debe aparecer un actor en la ventana del jugador.
+**Z-Order**: Grids → Entities (asegura que entities se vean encima).
 
+---
+
+### #0105: Entity Projection
+
+**Qué hace**: Convierte posición de entity en coordenadas de pantalla.
+
+**Fórmula**:
+- `sx = (entity.pos[:x] - cam_x) * zoom + 640`
+- `sy = 360 - (entity.pos[:y] - cam_y) * zoom`
+
+**Serializado**:
 ```ruby
-# world_renderer.rb
 # #0105
 def self.draw_entity(args, entity, zoom, cam_x, cam_y)
   sx = (entity.pos[:x] - cam_x) * zoom + 640
   sy = 360 - (entity.pos[:y] - cam_y) * zoom
-  # ...
+  
+  # Draw entity box
+  args.outputs.primitives << { 
+    x: sx, y: sy, w: 16 * zoom, h: 16 * zoom, 
+    r: 200, g: 200, b: 255, 
+    primitive_marker: :solid 
+  }
+  
+  # Draw entity label
+  args.outputs.primitives << { 
+    x: sx, y: sy + (20 * zoom), 
+    text: entity.type, 
+    size_enum: -2, 
+    r: 255, g: 255, b: 255, 
+    primitive_marker: :label 
+  }
 end
 ```
 
-### #0106: Dibujo de Rejilla (Renderizado de Fondo)
-**Dibujo de Rejilla**: El sub-proceso encargado de renderizar las capas de tiles. Itera sobre los datos visuales comprimidos por el cargador y aplica las transformaciones de cámara. Es el componente que construye la arquitectura visual del nivel, sirviendo como escenario base para la interacción de los agentes.
+**Pivot**: Centro de pantalla (640, 360).  
+**Y-flip**: DragonRuby usa Y-up, por eso `360 - ...`.
 
+---
+
+### #0106: Grid Rendering
+
+**Qué hace**: Renderiza tiles del grid (placeholder actual).
+
+**Serializado**:
 ```ruby
-# world_renderer.rb
 # #0106
 def self.draw_debug_grid(args, grid, zoom, cam_x, cam_y)
-  # ... tile rendering implementation ...
+  # Placeholder for tile rendering
 end
 ```
+
+**Estado actual**: Vacío (debug mode). Implementación completa requiere iterar `grid.visual_data`.
+
+---
+
+## Arquitectura de Render
+
+**Separación estricta**:
+- Render NO conoce lógica de juego
+- Render NO modifica `World`
+- Render solo lee y dibuja
+
+**Performance**:
+- Stateless (sin cache interno)
+- Redibuja todo cada frame
+- Suficiente para mapas pequeños (<1000 tiles)
+
 </details>
+
 
 ---
 
@@ -790,50 +1179,6 @@ class HotReloadService
 end
 ```
 
-### #0301: Clase Executor (La Mano del Destino)
-**Clase Executor**: El único componente con permiso para mutar el estado. Actúa como el puente final entre el pensamiento (Decisión) y la realidad (Estado). Su responsabilidad es aplicar físicamente los resultados del razonamiento táctico sobre los actores del mundo, garantizando que el estado del juego se mantenga sincronizado con las intenciones validadas por el cerebro.
-
-```ruby
-# executor.rb
-# #0301
-class Executor
-  def self.apply(decision, actor, args)
-    # ...
-  end
-end
-```
-
-### #0302: Despachador de Comandos (Dispatch de Acción)
-**Despachador de Comandos**: Implementa el patrón "Command" para la ejecución de acciones. Traduce el tipo de decisión (`:move`, `:hold`, `:fail`) en una rama de ejecución atómica. Este desacoplamiento permite que el sistema de ejecución crezca con nuevos tipos de acciones sin afectar la lógica del intérprete táctico, manteniendo los "planos" limpios y modulares.
-
-```ruby
-# executor.rb
-# #0302
-case decision.type
-when :move
-  execute_move(decision.payload, actor, args)
-# ...
-end
-```
-
-### #0303: Mutación de Coordenadas (Actualización del Mundo)
-**Mutación de Coordenadas**: El acto físico de mover a un actor. Actualiza las coordenadas de rejilla (`grid_x/y`) en el objeto de datos del actor. Este es el punto crítico donde la decisión de la IA se manifiesta en el mundo del juego, permitiendo que el siguiente cuadro de renderizado muestre al personaje en su nueva posición física.
-
-```ruby
-# executor.rb
-# #0303
-actor[:grid_x] = payload[:x]
-actor[:grid_y] = payload[:y]
-```
-
-### #0304: Trazabilidad y Diagnóstico (Persistencia de Decisión)
-**Trazabilidad y Diagnóstico**: Almacena una copia de la decisión aplicada dentro del propio actor. Esto crea un "Diario de Vuelo" que puede ser consultado por HUDs de debug o procesos de telemetría para entender qué estaba pensando el actor en su última acción. Es la herramienta de diagnóstico definitiva para el arquitecto, permitiendo una auditoría post-mortem de cualquier comportamiento inesperado.
-
-```ruby
-# executor.rb
-# #0304
-actor[:last_decision] = { type: :move, x: payload[:x], y: payload[:y] }
-```
 </details>
 
 ---
@@ -846,3 +1191,73 @@ Este rango está reservado para la expansión futura de la librería. Se vislumb
 
 *Más detalles en futuras actualizaciones.*
 </details>
+
+---
+
+## 🧭 Sistema de Marcadores Arquitectónicos
+
+### Qué es un Marcador #NNNN
+
+Los marcadores #NNNN NO son comentarios decorativos. Son **anclas de intención arquitectónica**.
+
+Cada marcador representa:
+- Una **decisión consciente**
+- Un **límite estructural**  
+- Un **punto de riesgo**
+
+**NO explica** cómo funciona el código.  
+**SÍ explica** por qué existe así y qué no debe cambiarse sin romper el sistema.
+
+---
+
+### Catálogo de Funciones Arquitectónicas
+
+| Rango | Función Arquitectónica |
+|-------|------------------------|
+| #0001 | Punto de entrada / frontera |
+| #0002 | Validación / zona de desconfianza |
+| #0003 | Núcleo inmutable |
+| #0004 | Decisión de formato |
+| #0005 | Dependencia externa |
+| #0006 | Transformación peligrosa |
+| #0007 | Interpretación semántica |
+| #0008 | Visual / no-canónico |
+| #0009 | Ensamblado final |
+
+---
+
+### Reglas de Uso
+
+**✅ CUÁNDO usar un #NNNN**:
+- Antes de una clase importante
+- Antes de un método peligroso
+- En fronteras de responsabilidad
+- En puntos que NO deben expandirse
+
+**❌ CUÁNDO NO usarlo**:
+- Para documentar lógica trivial
+- En getters / setters
+- En código obvio
+- Como comentario decorativo
+
+**Regla de oro**: Si todo tiene #0000, nada lo tiene.
+
+---
+
+### Contrato Arquitectónico
+
+**Si mueves código con #0003 o #0002** y no actualizas este documento, has creado **deuda arquitectónica**.
+
+**El número manda, no el código.**
+
+Los marcadores definen:
+- Qué puede cambiar
+- Qué NO puede cambiar  
+- Qué requiere decisión arquitectónica consciente
+
+---
+
+**Versión**: 0.8.0-alpha  
+**Última actualización**: 2026-02-02  
+**Estado**: Sellado y archivado
+```
