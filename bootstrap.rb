@@ -18,5 +18,8 @@ require_relative "stargate-ldtk/tactics/interpreter.rb"
 # #0016
 require_relative "stargate-ldtk/adapters/ldtk_to_dr.rb"
 
+# #0017 - The Bridge 🌉
+require_relative "stargate-ldtk/bridge.rb"
+
 # #0012
 puts "🌌 StargateLDtk v0.8.0-alpha: Initialized."
