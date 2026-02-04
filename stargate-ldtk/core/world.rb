@@ -38,13 +38,16 @@ module StargateLDtk
 
     # --- PUBLIC API ---
     class Grid
-      attr_reader :identifier, :size, :data, :visual_data
+      attr_reader :identifier, :size, :data, :visual_data, :tileset_path, :tileset_height, :grid_size
 
-      def initialize(identifier:, size:, data:, visual_data: [])
+      def initialize(identifier:, size:, data:, visual_data: [], tileset_path: nil, tileset_height: 0, grid_size: 16)
         @identifier = identifier
         @size = size # { cols:, rows: }
         @data = data # Flat array of IDs/Values
         @visual_data = visual_data
+        @tileset_path = tileset_path
+        @tileset_height = tileset_height
+        @grid_size = grid_size
       end
 
       def to_h
@@ -58,13 +61,14 @@ module StargateLDtk
 
     # --- PUBLIC API ---
     class Entity
-      attr_reader :id, :type, :pos, :fields
+      attr_reader :id, :type, :pos, :fields, :tile
 
-      def initialize(id:, type:, pos:, fields: {})
+      def initialize(id:, type:, pos:, fields: {}, tile: nil)
         @id = id
         @type = type
         @pos = pos # { x:, y:, grid_x:, grid_y: }
         @fields = fields
+        @tile = tile # { tileset_uid:, x:, y:, w:, h: }
       end
 
       def to_h

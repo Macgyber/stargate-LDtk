@@ -13,11 +13,15 @@ module StargateLDtk
       GRID_DATA_KEY = "intGridCsv"
       DEFAULT_GRID_SIZE = 16
 
-      def self.load(args, ldtk_json, version: 0)
+      def self.load(args, ldtk_json, map_path: "", version: 0)
         # Input validation
         raise ArgumentError, "ldtk_json must be a Hash" unless ldtk_json.is_a?(Hash)
         raise ArgumentError, "ldtk_json must have 'levels' key" unless ldtk_json.key?(LEVELS_KEY)
         
+        # Determinar base de rutas (relativo al archivo .ldtk)
+        base_dir = map_path.include?("/") ? map_path.split("/")[0..-2].join("/") : ""
+        base_dir += "/" unless base_dir.empty?
+
         levels = ldtk_json[LEVELS_KEY] || []
         level = levels[0] # Phoenix MVP: Single level focus
         return nil unless level
@@ -44,6 +48,22 @@ module StargateLDtk
             next unless layer["entityInstances"]
             
             layer["entityInstances"].each do |e|
+              # Buscar metadata del tileset para la entidad si tiene tile
+              e_tile = nil
+              if e["__tile"]
+                t_def = (ldtk_json["defs"]["tilesets"] || []).find { |ts| ts["uid"] == e["__tile"]["tilesetUid"] }
+                if t_def
+                  e_tile = {
+                    path: "#{base_dir}#{t_def["relPath"]}",
+                    source_x: e["__tile"]["x"],
+                    source_y: e["__tile"]["y"], # Se calibrará en el Bridge
+                    source_w: e["__tile"]["w"],
+                    source_h: e["__tile"]["h"],
+                    atlas_h: t_def["pxHei"]
+                  }
+                end
+              end
+
               # #0007
               entities << Entity.new(
                 id: e["iid"],
@@ -54,7 +74,8 @@ module StargateLDtk
                   grid_x: e["__grid"][0], 
                   grid_y: e["__grid"][1] 
                 },
-                fields: extract_fields(e["fieldInstances"])
+                fields: extract_fields(e["fieldInstances"]),
+                tile: e_tile
               )
             end
           else
@@ -63,11 +84,21 @@ module StargateLDtk
               { px: t["px"], src: t["src"], f: t["f"], t: t["t"] }
             end
 
+            # Buscar metadata del tileset (Fase 1: Búsqueda lineal en defs)
+            t_def = (ldtk_json["defs"]["tilesets"] || []).find { |ts| ts["uid"] == layer["__tilesetDefUid"] }
+            t_path = t_def ? t_def["relPath"] : layer["__tilesetRelPath"]
+            t_path = "#{base_dir}#{t_path}" if t_path && !t_path.start_with?("/")
+            
+            t_height = t_def ? t_def["pxHei"] : 0
+
             grids << Grid.new(
               identifier: layer["__identifier"],
               size: { cols: layer["__cWid"], rows: layer["__cHei"] },
               data: layer[GRID_DATA_KEY] || [],
-              visual_data: visual_tiles
+              visual_data: visual_tiles,
+              tileset_path: t_path,
+              tileset_height: t_height,
+              grid_size: layer["__gridSize"] || DEFAULT_GRID_SIZE
             )
           end
         end

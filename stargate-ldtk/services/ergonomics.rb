@@ -24,7 +24,7 @@ module StargateLDtk
         @last_mtime = get_mtime
       end
 
-      def changed?
+      def stargate_internal_changed?
         current = get_mtime
         if current > @last_mtime
           @last_mtime = current
